@@ -2,13 +2,14 @@
 
 #include "common.h"
 #include "d/a/obj/d_a_obj_base.h"
+#include "d/d_stage_mgr.h"
+#include "d/flag/sceneflag_manager.h"
 #include "f/f_base.h"
 #include "m/m_vec.h"
 #include "nw4r/g3d/res/g3d_resanmtexsrt.h"
 #include "nw4r/g3d/res/g3d_resfile.h"
 #include "nw4r/g3d/res/g3d_resmdl.h"
-
-#include <cstddef>
+#include "toBeSorted/event_manager.h"
 
 SPECIAL_ACTOR_PROFILE(OBJ_GOD_MARK, dAcOgodMark_c, fProfile::OBJ_GOD_MARK, 0x20A, 0, 6);
 
@@ -57,15 +58,56 @@ bool dAcOgodMark_c::createHeap() {
     return true;
 }
 int dAcOgodMark_c::actorExecute() {
+    mStateMgr.executeState();
     return SUCCEEDED;
 }
 int dAcOgodMark_c::actorExecuteInEvent() {
+    switch (mEventRelated.getCurrentEventCommand()) {
+        case 'act0': {
+            mEventRelated.advanceNext();
+        } break;
+        case 'act1': {
+            actorExecute();
+            if (field_0x444 == mAnmMatClr.getFrame(0)) {
+                mEventRelated.advanceNext();
+            }
+        } break;
+        case '????': {
+            actorExecute();
+        } break;
+        default: {
+            mEventRelated.advanceNext();
+        }
+    }
     return SUCCEEDED;
 }
 
-void dAcOgodMark_c::initializeState_Wait() {}
-void dAcOgodMark_c::executeState_Wait() {}
+void dAcOgodMark_c::initializeState_Wait() {
+    mAnmMatClr.setFrame(0.0f, 0);
+    return;
+}
+void dAcOgodMark_c::executeState_Wait() {
+    if (SceneflagManager::sInstance->checkFlag(roomid & 0xffff, field_0xad)) {
+        void *zevDat = getOarcZev("GodsMark");
+        Event event = Event("GodsMark", zevDat, 1, 0x100001, nullptr, nullptr);
+        mEventRelated.scheduleEvent(event, 0);
+
+        if (EventManager::isInEvent(this, "GodsMark")) {
+            mStateMgr.changeState(StateID_Shine);
+        }
+    }
+    return;
+}
+
 void dAcOgodMark_c::finalizeState_Wait() {}
+
 void dAcOgodMark_c::initializeState_Shine() {}
-void dAcOgodMark_c::executeState_Shine() {}
+
+void dAcOgodMark_c::executeState_Shine() {
+    if (mAnmMatClr.getFrame(0) == field_0x444) {
+        return;
+    } else {
+        mAnmMatClr.play();
+    }
+}
 void dAcOgodMark_c::finalizeState_Shine() {}

@@ -2,15 +2,15 @@
 #define D_A_OBJ_GOD_MARK_H
 
 #include "d/a/obj/d_a_obj_base.h"
-#include "d/col/bg/d_bg_s_sph_chk.h"
 #include "m/m3d/m_anmmatclr.h"
 #include "m/m3d/m_anmtexsrt.h"
 #include "s/s_State.hpp"
-#include "s/s_StateMgr.hpp"
+#include "toBeSorted/actor_event.h"
+#include "toBeSorted/stage_render_stuff.h"
 
 class dAcOgodMark_c : public dAcObjBase_c {
 public:
-    dAcOgodMark_c() : mStateMgr(*this, sStateID::null) {}
+    dAcOgodMark_c() : mStateMgr(*this, sStateID::null), mSceneCallback(this), mEventRelated(*this, nullptr) {}
     virtual ~dAcOgodMark_c() {}
 
     virtual int create() override;
@@ -26,10 +26,13 @@ public:
 private:
     /* 0x330 */ nw4r::g3d::ResFile mRes;
     /* 0x334 */ m3d::smdl_c mMdl;
-    m3d::anmTexSrt_c mAnmTexSrt;
-    m3d::anmMatClr_c mAnmMatClr;
-    dBgS_SphChk mSphChk;
     /* 0x??? */ STATE_MGR_DECLARE(dAcOgodMark_c);
+    /* 0x138 */ ActorEventRelated mEventRelated;
+    m3d::anmTexSrt_c mAnmTexSrt;
+    /* Should be 0x408 (1032) */ m3d::anmMatClr_c mAnmMatClr;
+    dScnCallback_c mSceneCallback;
+    f32 field_0xad;
+    f32 field_0x444;
 };
 
 #endif
