@@ -25,13 +25,13 @@ public:
 
 private:
     /* 0x330 */ nw4r::g3d::ResFile mRes;
-    /* 0x334 */ m3d::smdl_c mMdl;
+    /* 0x334 maybe 0xa0? */ m3d::smdl_c mMdl;
     /* 0x??? */ STATE_MGR_DECLARE(dAcOgodMark_c);
     /* 0x138 */ ActorEventRelated mEventRelated;
     m3d::anmTexSrt_c mAnmTexSrt;
     /* Should be 0x408 (1032) */ m3d::anmMatClr_c mAnmMatClr;
     dScnCallback_c mSceneCallback;
-    f32 field_0xad;
+    u32 field_0xad;
     f32 field_0x444;
 };
 

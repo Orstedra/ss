@@ -2,7 +2,6 @@
 
 #include "common.h"
 #include "d/a/obj/d_a_obj_base.h"
-#include "d/d_stage_mgr.h"
 #include "d/flag/sceneflag_manager.h"
 #include "f/f_base.h"
 #include "m/m_vec.h"
@@ -19,9 +18,30 @@ STATE_DEFINE(dAcOgodMark_c, Shine);
 int dAcOgodMark_c::create() {
     CREATE_ALLOCATOR(dAcOgodMark_c);
 
-    mVec3_c min, max;
-    mMdl.getBounds(&min, &max);
-    boundingBox.Set(min, max);
+    field_0xad = params >> 4;
+
+    mSceneCallback.attach(mMdl);
+
+    rotation.set(rot_copy);
+
+    mAnmTexSrt.setFrame(rot_copy.x, 0);
+
+    rotation.clear(); // ??
+
+    targetFiTextId = mAnmMatClr.getFrameMax(0) - 1.0;
+
+    updateMatrix();
+
+    mMdl.setLocalMtx(mWorldMtx);
+
+    if (SceneflagManager::sInstance->checkFlag(roomid & 0xffff, field_0xad)) {
+        mAnmMatClr.setFrame(targetFiTextId, 0);
+        mStateMgr.changeState(StateID_Shine);
+    } else {
+        mStateMgr.changeState(StateID_Wait);
+    }
+
+    boundingBox.Set(mVec3_c(-300.0f, 500.0f, -2600.0f), mVec3_c(300.0f, 1100.0f, -2200.0f));
 
     return SUCCEEDED;
 }
@@ -32,6 +52,9 @@ int dAcOgodMark_c::draw() {
     drawModelType1(&mMdl);
     return SUCCEEDED;
 }
+
+const char *godsMarkTypes[] = {"GodsMark_F", "GodsMark_D", "GodsMark_N"};
+
 bool dAcOgodMark_c::createHeap() {
     rot_copy = params & 0xf;
     if ((params & 0xf) == 0xf) {
@@ -47,7 +70,7 @@ bool dAcOgodMark_c::createHeap() {
     } else {
         nw4r::g3d::ResAnmTexSrt resAnmTexSrt = mRes.GetResAnmTexSrt("GodsMark");
         if (!mAnmTexSrt.create(resMdl, resAnmTexSrt, &heap_allocator, nullptr, 1)) {
-            nw4r::g3d::ResAnmClr anmClr = mRes.GetResAnmClr("GodsMark_F");
+            nw4r::g3d::ResAnmClr anmClr = mRes.GetResAnmClr(godsMarkTypes[0]);
             if (mAnmMatClr.create(resMdl, anmClr, &heap_allocator, nullptr, 1) == 0) {
                 return false;
             }
