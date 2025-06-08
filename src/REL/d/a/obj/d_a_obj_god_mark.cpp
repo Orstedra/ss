@@ -10,23 +10,50 @@
 #include "nw4r/g3d/res/g3d_resmdl.h"
 #include "toBeSorted/event_manager.h"
 
+const char *godsMarkTypes[] = {"GodsMark_F", "GodsMark_D", "GodsMark_N"};
+
 SPECIAL_ACTOR_PROFILE(OBJ_GOD_MARK, dAcOgodMark_c, fProfile::OBJ_GOD_MARK, 0x20A, 0, 6);
 
 STATE_DEFINE(dAcOgodMark_c, Wait);
 STATE_DEFINE(dAcOgodMark_c, Shine);
 
+bool dAcOgodMark_c::createHeap() {
+    u8 rot = params & 0xF;
+    if (rot == 0xF) {
+        rot = 0;
+    }
+    rot_copy = rot;
+
+    mRes = nw4r::g3d::ResFile(getOarcResFile("GodsMark"));
+    nw4r::g3d::ResMdl resMdl = mRes.GetResMdl("GodsMark");
+
+    if (!mMdl.create(resMdl, &heap_allocator, 0x120, 1, nullptr)) {
+        return false;
+    }
+    if (!mAnmTexSrt.create(resMdl, mRes.GetResAnmTexSrt("GodsMark"), &heap_allocator, nullptr, 1)) {
+        return false;
+    }
+    if (!mAnmMatClr.create(resMdl, mRes.GetResAnmClr(godsMarkTypes[0]), &heap_allocator, nullptr, 1) == 0) {
+        return false;
+    }
+
+    return true;
+}
+
 int dAcOgodMark_c::create() {
     CREATE_ALLOCATOR(dAcOgodMark_c);
 
-    field_0xad = params >> 4;
+    _1[10] = params >> 4;
 
     mSceneCallback.attach(mMdl);
 
-    rotation.set(rot_copy);
+    mMdl.setAnm(mAnmTexSrt);
 
-    mAnmTexSrt.setFrame(rot_copy.x, 0);
+    double nose = 4503599627370496.0;
 
-    rotation.clear(); // ??
+    mAnmTexSrt.setFrame(field_0x444 - nose, 0);
+
+    mMdl.setAnm(mAnmMatClr);
 
     targetFiTextId = mAnmMatClr.getFrameMax(0) - 1.0;
 
@@ -34,7 +61,9 @@ int dAcOgodMark_c::create() {
 
     mMdl.setLocalMtx(mWorldMtx);
 
-    if (SceneflagManager::sInstance->checkFlag(roomid & 0xffff, field_0xad)) {
+    bool checkFlag = SceneflagManager::sInstance->checkFlag(roomid, field_0xad);
+
+    if (checkFlag) {
         mAnmMatClr.setFrame(targetFiTextId, 0);
         mStateMgr.changeState(StateID_Shine);
     } else {
@@ -53,33 +82,6 @@ int dAcOgodMark_c::draw() {
     return SUCCEEDED;
 }
 
-const char *godsMarkTypes[] = {"GodsMark_F", "GodsMark_D", "GodsMark_N"};
-
-bool dAcOgodMark_c::createHeap() {
-    rot_copy = params & 0xf;
-    if ((params & 0xf) == 0xf) {
-        rot_copy = 0;
-    }
-
-    mRes = nw4r::g3d::ResFile(getOarcResFile("GodsMark"));
-
-    nw4r::g3d::ResMdl resMdl = mRes.GetResMdl("GodsMark");
-
-    if (!mMdl.create(resMdl, &heap_allocator, 0x120, 1, nullptr)) {
-        return false;
-    } else {
-        nw4r::g3d::ResAnmTexSrt resAnmTexSrt = mRes.GetResAnmTexSrt("GodsMark");
-        if (!mAnmTexSrt.create(resMdl, resAnmTexSrt, &heap_allocator, nullptr, 1)) {
-            nw4r::g3d::ResAnmClr anmClr = mRes.GetResAnmClr(godsMarkTypes[0]);
-            if (mAnmMatClr.create(resMdl, anmClr, &heap_allocator, nullptr, 1) == 0) {
-                return false;
-            }
-        } else {
-            return false;
-        }
-    }
-    return true;
-}
 int dAcOgodMark_c::actorExecute() {
     mStateMgr.executeState();
     return SUCCEEDED;

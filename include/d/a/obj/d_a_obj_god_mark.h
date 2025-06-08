@@ -13,10 +13,10 @@ public:
     dAcOgodMark_c() : mStateMgr(*this, sStateID::null), mSceneCallback(this), mEventRelated(*this, nullptr) {}
     virtual ~dAcOgodMark_c() {}
 
+    virtual bool createHeap() override;
     virtual int create() override;
     virtual int doDelete() override;
     virtual int draw() override;
-    virtual bool createHeap() override;
     virtual int actorExecute() override;
     virtual int actorExecuteInEvent() override;
 
@@ -31,7 +31,7 @@ private:
     m3d::anmTexSrt_c mAnmTexSrt;
     /* Should be 0x408 (1032) */ m3d::anmMatClr_c mAnmMatClr;
     dScnCallback_c mSceneCallback;
-    u32 field_0xad;
+    u8 field_0xad;
     f32 field_0x444;
 };
 
