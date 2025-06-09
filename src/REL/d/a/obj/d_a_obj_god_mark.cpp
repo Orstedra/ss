@@ -10,7 +10,9 @@
 #include "nw4r/g3d/res/g3d_resmdl.h"
 #include "toBeSorted/event_manager.h"
 
-const char *godsMarkTypes[] = {"GodsMark_F", "GodsMark_D", "GodsMark_N"};
+static const char *godsMarkTypes[] = {"GodsMark_F", "GodsMark_D", "GodsMark_N"};
+
+static const char name[] = "GodsMark";
 
 SPECIAL_ACTOR_PROFILE(OBJ_GOD_MARK, dAcOgodMark_c, fProfile::OBJ_GOD_MARK, 0x20A, 0, 6);
 
@@ -24,13 +26,13 @@ bool dAcOgodMark_c::createHeap() {
     }
     rot_copy = rot;
 
-    mRes = nw4r::g3d::ResFile(getOarcResFile("GodsMark"));
-    nw4r::g3d::ResMdl resMdl = mRes.GetResMdl("GodsMark");
+    mRes = nw4r::g3d::ResFile(getOarcResFile(name));
+    nw4r::g3d::ResMdl resMdl = mRes.GetResMdl(name);
 
     if (!mMdl.create(resMdl, &heap_allocator, 0x120, 1, nullptr)) {
         return false;
     }
-    if (!mAnmTexSrt.create(resMdl, mRes.GetResAnmTexSrt("GodsMark"), &heap_allocator, nullptr, 1)) {
+    if (!mAnmTexSrt.create(resMdl, mRes.GetResAnmTexSrt(name), &heap_allocator, nullptr, 1)) {
         return false;
     }
     if (!mAnmMatClr.create(resMdl, mRes.GetResAnmClr(godsMarkTypes[0]), &heap_allocator, nullptr, 1) == 0) {
@@ -43,28 +45,26 @@ bool dAcOgodMark_c::createHeap() {
 int dAcOgodMark_c::create() {
     CREATE_ALLOCATOR(dAcOgodMark_c);
 
-    _1[10] = params >> 4;
+    mFlag = params >> 4;
 
     mSceneCallback.attach(mMdl);
 
     mMdl.setAnm(mAnmTexSrt);
 
-    double nose = 4503599627370496.0;
-
-    mAnmTexSrt.setFrame(field_0x444 - nose, 0);
+    mAnmTexSrt.setFrame((f32)field_0x444, 0);
 
     mMdl.setAnm(mAnmMatClr);
 
-    targetFiTextId = mAnmMatClr.getFrameMax(0) - 1.0;
+    field_0x444 = mAnmMatClr.getFrameMax(0) - 1.0f;
 
     updateMatrix();
 
     mMdl.setLocalMtx(mWorldMtx);
 
-    bool checkFlag = SceneflagManager::sInstance->checkFlag(roomid, field_0xad);
+    bool checkFlag = SceneflagManager::sInstance->checkFlag(roomid, mFlag);
 
     if (checkFlag) {
-        mAnmMatClr.setFrame(targetFiTextId, 0);
+        mAnmMatClr.setFrame(field_0x444, 0);
         mStateMgr.changeState(StateID_Shine);
     } else {
         mStateMgr.changeState(StateID_Wait);
@@ -111,15 +111,16 @@ void dAcOgodMark_c::initializeState_Wait() {
     mAnmMatClr.setFrame(0.0f, 0);
     return;
 }
-void dAcOgodMark_c::executeState_Wait() {
-    if (SceneflagManager::sInstance->checkFlag(roomid & 0xffff, field_0xad)) {
-        void *zevDat = getOarcZev("GodsMark");
-        Event event = Event("GodsMark", zevDat, 1, 0x100001, nullptr, nullptr);
-        mEventRelated.scheduleEvent(event, 0);
 
-        if (EventManager::isInEvent(this, "GodsMark")) {
-            mStateMgr.changeState(StateID_Shine);
-        }
+void dAcOgodMark_c::executeState_Wait() {
+    bool checkFlag = SceneflagManager::sInstance->checkFlag(roomid & 0xffff, mFlag);
+    if (checkFlag) {
+        void *zevDat = getOarcZev(name);
+        Event event = Event(name, zevDat, 1, 0x100001, nullptr, nullptr);
+        mEventRelated.scheduleEvent(event, 0);
+    }
+    if (EventManager::isInEvent(this, name)) {
+        mStateMgr.changeState(StateID_Shine);
     }
     return;
 }

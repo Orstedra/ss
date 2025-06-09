@@ -32,6 +32,7 @@ private:
     /* Should be 0x408 (1032) */ m3d::anmMatClr_c mAnmMatClr;
     dScnCallback_c mSceneCallback;
     u8 field_0xad;
+    u8 mFlag;
     f32 field_0x444;
 };
 
