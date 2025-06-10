@@ -20,25 +20,24 @@ STATE_DEFINE(dAcOgodMark_c, Wait);
 STATE_DEFINE(dAcOgodMark_c, Shine);
 
 bool dAcOgodMark_c::createHeap() {
-    u8 rot = params & 0xF;
-    if (rot == 0xF) {
-        rot = 0;
+    u8 markParam = params & 0xF;
+    mMarkType = markParam;
+    if (markParam == 0xF) {
+        mMarkType = 0;
     }
-    rot_copy = rot;
 
     mRes = nw4r::g3d::ResFile(getOarcResFile(name));
     nw4r::g3d::ResMdl resMdl = mRes.GetResMdl(name);
 
-    if (!mMdl.create(resMdl, &heap_allocator, 0x120, 1, nullptr)) {
+    if (!mMdl.create(resMdl, &heap_allocator, 0x32c, 1, nullptr)) {
         return false;
     }
     if (!mAnmTexSrt.create(resMdl, mRes.GetResAnmTexSrt(name), &heap_allocator, nullptr, 1)) {
         return false;
     }
-    if (!mAnmMatClr.create(resMdl, mRes.GetResAnmClr(godsMarkTypes[0]), &heap_allocator, nullptr, 1) == 0) {
+    if (!mAnmMatClr.create(resMdl, mRes.GetResAnmClr(godsMarkTypes[mMarkType]), &heap_allocator, nullptr, 1)) {
         return false;
     }
-
     return true;
 }
 
@@ -51,7 +50,7 @@ int dAcOgodMark_c::create() {
 
     mMdl.setAnm(mAnmTexSrt);
 
-    mAnmTexSrt.setFrame((f32)field_0x444, 0);
+    mAnmTexSrt.setFrame(static_cast<f32>(mMarkType), 0);
 
     mMdl.setAnm(mAnmMatClr);
 
